@@ -46,9 +46,10 @@ class HalfCheetah(WalkerBase, MJCFBasedRobot):
         for part_id, part in self.parts.items():
             self._p.changeDynamics(part.bodyIndex, part.bodyPartIndex, lateralFriction=0.8, spinningFriction=0.1, rollingFriction=0.1, restitution=0.5)
 
-        self.jdict["bthigh"].power_coef = 120.0
+        self.jdict["bthigh"].power_coef = 120.0 # 120
         self.jdict["bshin"].power_coef  = 90.0
         self.jdict["bfoot"].power_coef  = 60.0
         self.jdict["fthigh"].power_coef = 140.0
         self.jdict["fshin"].power_coef  = 60.0
-        self.jdict["ffoot"].power_coef  = 30.0
+        self.jdict["ffoot"].power_coef  = 30.0  # 30
+        print("not reach here?")

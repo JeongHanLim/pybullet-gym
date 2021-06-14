@@ -3,6 +3,9 @@ from pybulletgym.envs.roboschool.robots.locomotors import Ant
 
 
 class AntBulletEnv(WalkerBaseBulletEnv):
-    def __init__(self):
-        self.robot = Ant()
+    def __init__(self, **kwargs):
+        self.robot = Ant(**kwargs)
         WalkerBaseBulletEnv.__init__(self, self.robot)
+
+    def update_power(self, hyperparams):
+        self.robot.update_power(hyperparams)

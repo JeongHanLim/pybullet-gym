@@ -40,3 +40,5 @@ class Hopper(WalkerBase, MJCFBasedRobot):
             print("self.scene.timestep")
             print(self.scene.timestep)
         return (self.pos_after-pos_before) / self.scene.dt
+
+

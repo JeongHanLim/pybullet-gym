@@ -25,12 +25,12 @@ class XmlBasedRobot:
 		self.action_space = gym.spaces.Box(-high, high)
 		high = np.inf * np.ones([obs_dim])
 		self.observation_space = gym.spaces.Box(-high, high)
-
 		self.robot_name = robot_name
 		self.self_collision = self_collision
 
 	def addToScene(self, bullet_client, bodies):
 		self._p = bullet_client
+
 
 		if self.parts is not None:
 			parts = self.parts
@@ -87,7 +87,6 @@ class XmlBasedRobot:
 					ordered_joints.append(joints[joint_name])
 
 					joints[joint_name].power_coef = 100.0
-
 		return parts, joints, ordered_joints, self.robot_body
 
 	def robot_specific_reset(self, physicsClient):
@@ -109,7 +108,6 @@ class MJCFBasedRobot(XmlBasedRobot):
 
 	def reset(self, bullet_client):
 		full_path = os.path.join(os.path.dirname(__file__), "..", "..", "assets", "mjcf", self.model_xml)
-
 		self._p = bullet_client
 		# print("Created bullet_client with id=", self._p._client)
 		if self.doneLoading == 0:
@@ -130,6 +128,38 @@ class MJCFBasedRobot(XmlBasedRobot):
 	@staticmethod
 	def calc_potential():
 		return 0
+
+	def setMotorsAngleInRealTime_with_queue(self, q):
+		while (True):
+			if not q.empty():
+				pastTime = 0.0
+				motorTargetAngles, motorTargetTime = q.get()
+				if motorTargetTime == 0:
+					for i in range(self._joint_number):
+						p.setJointMotorControl2(bodyIndex=self._robot, jointIndex=self._joint_id[i],
+												controlMode=p.POSITION_CONTROL,
+												targetPosition=motorTargetAngles[i],
+												positionGain=self._kp, velocityGain=self._kd, force=self._torque,
+												maxVelocity=self._max_velocity)
+				else:
+					refTime = time.time()
+					for i in range(self._joint_number):
+						self._joint_currentPos[i] = p.getJointState(self._robot, self._joint_id[i])[0]
+						dydt = (np.array(motorTargetAngles) - self._joint_currentPos) / motorTargetTime
+					while pastTime < motorTargetTime:
+						pastTime = time.time() - refTime
+						for i in range(self._joint_number):
+							p.setJointMotorControl2(bodyIndex=self._robot, jointIndex=self._joint_id[i],
+													controlMode=p.POSITION_CONTROL,
+													targetPosition=self._joint_currentPos[i] + dydt[i] * pastTime,
+													positionGain=self._kp, velocityGain=self._kd, force=self._torque,
+													maxVelocity=self._max_velocity)
+					for i in range(self._joint_number):
+						p.setJointMotorControl2(bodyIndex=self._robot, jointIndex=self._joint_id[i],
+												controlMode=p.POSITION_CONTROL,
+												targetPosition=motorTargetAngles[i],
+												positionGain=self._kp, velocityGain=self._kd, force=self._torque,
+												maxVelocity=self._max_velocity)
 
 
 class URDFBasedRobot(XmlBasedRobot):
